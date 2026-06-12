@@ -9,7 +9,14 @@
 <meta property="og:type" content="website">
 <meta name="description" content="Interactive story map of Jalal al-Din Mangburni's journey, 1220–1231.">
 <meta property="og:url" content="https://yingzhiva.github.io/jalal-al-din-journey/">
+<meta property="og:site_name" content="The Last Khwarazmshah">
 <meta property="og:image" content="https://yingzhiva.github.io/jalal-al-din-journey/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+<meta property="og:image:type" content="image/png">
+<meta name="author" content="YingzhiVA">
+<meta property="article:author" content="https://github.com/YingzhiVA">
+<meta property="article:published_time" content="2026-06-12T12:00:00Z">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -135,7 +142,7 @@
   .tl-tick{position:absolute;top:50%;width:7px;height:7px;border-radius:50%;
     transform:translate(-50%,-50%);cursor:pointer;border:1px solid rgba(255,253,245,.6);transition:transform .1s;}
   .tl-tick:hover{transform:translate(-50%,-50%) scale(1.7);}
-  .tl-label{white-space:nowrap;font-size:12.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .tl-label{white-space:nowrap;font-size:12.5px;}
   .tl-label b{color:#e8b84b;font-weight:600;}
 
   /* ---------- Markers ---------- */
@@ -246,11 +253,17 @@
   @media (max-width:900px){
     #timeline{bottom:40px;}   /* clear the attribution line on mid-size screens */
   }
-  @media (max-width:640px){
-    #panel{width:calc(100vw - 28px);max-height:55%;}
+  @media (max-width:760px){
     /* left-anchored, clear of the control column and the attribution line */
     #timeline{left:10px;right:56px;bottom:48px;transform:none;max-width:none;
       padding:6px 12px;gap:7px;}
+    .tl-label{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+    /* during the ride the pill also hosts pause/stop: drop the ticks track
+       (and its 1220/1231 ends) so the year/odometer label stays readable */
+    body.riding .tl-track, body.riding .tl-end{display:none;}
+  }
+  @media (max-width:640px){
+    #panel{width:calc(100vw - 28px);max-height:55%;}
   }
 </style>
 </head>
