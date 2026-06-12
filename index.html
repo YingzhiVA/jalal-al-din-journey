@@ -442,21 +442,29 @@ const REGION_LABELS = [
 
 /* =============================== MAP =============================== */
 
-const map = L.map('map', {zoomControl:false, minZoom:3, worldCopyJump:true});
+const map = L.map('map', {zoomControl:false, minZoom:3, worldCopyJump:true, zoomSnap:0.25});
 L.control.zoom({position:'bottomright'}).addTo(map);
 
 /* The view MUST be set before any vector layer is added, otherwise Leaflet's
    renderer initialises without bounds and every overlay silently dies. */
 const fullBounds = L.latLngBounds(STOPS.map(s=>[s.lat,s.lng])).extend([EMBASSY.lat,EMBASSY.lng]);
 
+/* On phones the panel would cover most of the map (and is too narrow for its
+   text anyway), so it starts collapsed behind the "The Story" chip. */
+if (window.innerWidth <= 640){
+  document.getElementById('panel').classList.add('hidden');
+  document.getElementById('openPanel').style.display = 'block';
+}
+
 /* Fit the whole journey into the area NOT covered by the story panel, so the
    first view conveys the full extent of the ride. */
 function fitJourney(){
   const p = document.getElementById('panel');
+  const hidden = p.classList.contains('hidden');
   const opts = window.innerWidth <= 640
-    ? {paddingTopLeft: L.point(12, Math.min(p.offsetHeight, window.innerHeight*.55) + 26),
+    ? {paddingTopLeft: L.point(12, hidden ? 64 : Math.min(p.offsetHeight, window.innerHeight*.55) + 26),
        paddingBottomRight: L.point(12, 64)}
-    : {paddingTopLeft: L.point(p.offsetWidth + 30, 26),
+    : {paddingTopLeft: L.point(hidden ? 24 : p.offsetWidth + 30, 26),
        paddingBottomRight: L.point(24, 64)};
   map.fitBounds(fullBounds, opts);
 }
