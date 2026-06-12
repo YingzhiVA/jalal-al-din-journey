@@ -135,6 +135,7 @@
     max-width:calc(100vw - 124px);  /* never reaches under the corner controls */
     box-shadow:0 4px 16px rgba(0,0,0,.45);
   }
+  .tl-years{display:flex;align-items:center;gap:10px;min-width:0;}
   .tl-end{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:14px;color:#c9a85c;}
   .tl-track{position:relative;flex:0 1 250px;min-width:80px;height:8px;background:rgba(243,233,210,.18);border-radius:4px;}
   .tl-fill{position:absolute;left:0;top:0;height:100%;width:0;border-radius:4px;
@@ -256,11 +257,16 @@
   @media (max-width:760px){
     /* left-anchored, clear of the control column and the attribution line */
     #timeline{left:10px;right:56px;bottom:48px;transform:none;max-width:none;
-      padding:6px 12px;gap:7px;}
+      padding:6px 12px;gap:7px;row-gap:3px;}
     .tl-label{min-width:0;overflow:hidden;text-overflow:ellipsis;}
-    /* during the ride the pill also hosts pause/stop: drop the ticks track
-       (and its 1220/1231 ends) so the year/odometer label stays readable */
-    body.riding .tl-track, body.riding .tl-end{display:none;}
+    /* idle: a two-line pill — years track on top, the odometer label on its
+       own full-width line below so it never clips */
+    body:not(.riding) #timeline{flex-wrap:wrap;justify-content:center;}
+    .tl-years{gap:7px;flex:1 1 100%;justify-content:center;}
+    body:not(.riding) .tl-label{flex:1 1 100%;text-align:center;white-space:normal;overflow:visible;}
+    /* during the ride the pill hosts pause/stop instead: drop the ticks track
+       so the year/odometer label stays readable on one line */
+    body.riding .tl-years{display:none;}
   }
   @media (max-width:640px){
     #panel{width:calc(100vw - 28px);max-height:55%;}
@@ -315,9 +321,11 @@
 </div>
 
 <div id="timeline">
-  <span class="tl-end">1220</span>
-  <div class="tl-track" id="tlTrack"><div class="tl-fill" id="tlFill"></div></div>
-  <span class="tl-end">1231</span>
+  <div class="tl-years">
+    <span class="tl-end">1220</span>
+    <div class="tl-track" id="tlTrack"><div class="tl-fill" id="tlFill"></div></div>
+    <span class="tl-end">1231</span>
+  </div>
   <span class="tl-label" id="tlLabel"></span>
   <button class="tl-btn" id="tlPause" title="Pause the ride">⏸</button>
   <button class="tl-btn" id="tlStop" title="Stop the ride">⏹</button>
@@ -747,13 +755,18 @@ EVENT_SEQ.forEach((s,i)=>{
   tlTrack.appendChild(t);
 });
 
+// Compact wording while riding on very narrow phones, where the pill also
+// hosts the pause/stop buttons and the full label would be cut off.
+function rideLabel(year, yn, km){
+  const tight = window.innerWidth <= 360 && document.body.classList.contains('riding');
+  if (tight) return `<b>${year}</b> · yr ${yn}/12${km != null ? ` · ${fmtKm(km)} km` : ''}`;
+  return `<b>${year}</b> · year ${yn} of 12${km != null ? ` · ≈ ${fmtKm(km)} km ridden` : ''}`;
+}
 function setTimelineTo(i){
   const s = EVENT_SEQ[i]; if (!s) return;
   tlFill.style.width = timePct(s)+'%';
   const yn = Math.min(12, Math.max(1, (+yearOf(s)) - 1219));
-  tlLabel.innerHTML = s._km != null
-    ? `<b>${yearOf(s)}</b> · year ${yn} of 12 · ≈ ${fmtKm(s._km)} km ridden`
-    : `<b>${yearOf(s)}</b> · year ${yn} of 12`;
+  tlLabel.innerHTML = rideLabel(yearOf(s), yn, s._km);
 }
 function resetTimeline(){
   tlFill.style.width = '100%';
@@ -956,7 +969,7 @@ function step(ts){
       const p = {lat:a.lat+(b.lat-a.lat)*t, lng:a.lng+(b.lng-a.lng)*t};
       horse.setLatLng(p); follow(p);
       const liveKm = cumKm[idx] + t*(cumKm[idx+1]-cumKm[idx]);
-      tlLabel.innerHTML = `<b>${rideYear}</b> · year ${rideYearN} of 12 · ≈ ${fmtKm(liveKm)} km ridden`;
+      tlLabel.innerHTML = rideLabel(rideYear, rideYearN, liveKm);
     }
   }
   if (idx >= flatPath.length-1){ finishRide(); return; }
