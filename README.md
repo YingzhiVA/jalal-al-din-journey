@@ -5,6 +5,8 @@ eleven years and roughly **13,750 km** in the saddle, from the fall of Samarkand
 in 1220 to a lonely death in the mountains of Kurdistan in 1231 — with the
 Mongol Empire hunting him most of the way.
 
+**[▶ Explore it live](https://yingzhiva.github.io/jalal-al-din-journey/)**
+
 ![Preview](preview.png)
 
 ## Features
@@ -20,7 +22,8 @@ Mongol Empire hunting him most of the way.
 
 ## Run it
 
-Open `index.html` in any browser — it is a single self-contained page
+Visit the [live page](https://yingzhiva.github.io/jalal-al-din-journey/), or
+open `index.html` in any browser — it is a single self-contained page
 (an internet connection is needed for the map tiles).
 
 ## Feedback
