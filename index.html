@@ -218,19 +218,20 @@
   .stat{background:rgba(138,47,29,.08);border:1px solid var(--parchment-edge);border-radius:8px;
     padding:8px 11px;font-size:13px;line-height:1.45;margin:0 0 10px;}
 
-  /* ---------- Info button & modal ---------- */
-  #infoBtn{
+  /* ---------- Info & glossary buttons + modals ---------- */
+  #infoBtn,#glossBtn{
     box-sizing:border-box;width:38px;height:38px;border-radius:9px;
     border:1px solid var(--parchment-edge);background:var(--parchment);color:#6b4f2e;
     font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:700;font-size:21px;
     cursor:pointer;box-shadow:0 4px 14px rgba(40,25,5,.4);display:block;line-height:1;
   }
-  #infoBtn:hover{background:var(--accent);color:#f7eedd;}
-  #infoModal{
+  #infoBtn:hover,#glossBtn:hover{background:var(--accent);color:#f7eedd;}
+  #glossBtn{font-style:normal;font-size:19px;padding:0;}
+  #infoModal,#glossModal{
     position:absolute;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;
     background:rgba(20,12,4,.55);
   }
-  #infoModal.show{display:flex;}
+  #infoModal.show,#glossModal.show{display:flex;}
   #infoCard{
     box-sizing:border-box;
     position:relative;background:var(--parchment);color:var(--ink);max-width:430px;width:calc(100vw - 60px);
@@ -239,8 +240,34 @@
   }
   #infoCard h3{font-family:'Cormorant Garamond',serif;font-size:21px;margin:0 0 10px;}
   #infoCard p{font-size:13px;line-height:1.5;margin:0 0 10px;}
-  #closeInfo{position:absolute;top:8px;right:10px;border:none;background:none;font-size:17px;cursor:pointer;color:#7a6748;}
+  #closeInfo,#closeGloss{position:absolute;top:8px;right:10px;border:none;background:none;font-size:17px;cursor:pointer;color:#7a6748;}
   #infoCard a{color:var(--accent);font-weight:600;text-decoration-color:rgba(138,47,29,.4);}
+
+  #glossCard{
+    box-sizing:border-box;position:relative;display:flex;flex-direction:column;
+    background:var(--parchment);color:var(--ink);max-width:480px;width:calc(100vw - 36px);
+    max-height:min(78vh, 660px);
+    border:1px solid var(--parchment-edge);border-radius:10px;padding:18px 20px 14px;
+    box-shadow:0 10px 40px rgba(0,0,0,.55);
+  }
+  #glossCard h3{font-family:'Cormorant Garamond',serif;font-size:21px;margin:0 0 2px;}
+  #glossCard .gsub{font-size:12px;color:#7a6748;margin:0 0 10px;}
+  #glossFilter{
+    box-sizing:border-box;width:100%;border:1px solid var(--parchment-edge);border-radius:8px;
+    padding:7px 11px;font:inherit;font-size:13px;background:rgba(255,252,242,.75);color:var(--ink);
+    margin-bottom:8px;
+  }
+  #glossFilter:focus{outline:none;border-color:var(--accent);}
+  #glossList{overflow-y:auto;min-height:0;padding-right:8px;}
+  .gletter{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:16px;color:var(--accent);
+    border-bottom:1px solid var(--parchment-edge);margin:10px 0 5px;}
+  #glossList .gletter:first-child{margin-top:0;}
+  .gentry{font-size:12.5px;line-height:1.5;margin:0 0 8px;}
+  .gentry b{color:#4a3415;}
+  .gtag{display:inline-block;font-size:9px;text-transform:uppercase;letter-spacing:.8px;font-weight:700;
+    border-radius:8px;padding:1px 7px 2px;margin-left:6px;position:relative;top:-1px;color:#fff;}
+  .gtag.person{background:#b33a3a;} .gtag.realm{background:#3f7fa6;} .gtag.people{background:#7d5ba6;}
+  .gtag.place{background:#5e8c4a;}  .gtag.title{background:#c98a2b;}
 
   @media (max-height:680px){
     #panel{padding:10px 16px 7px;}
@@ -286,7 +313,7 @@
   <button id="playBtn">▶ &nbsp;Ride the journey</button>
   <p class="listcap">Jump to a chapter</p>
   <ul class="chapters" id="chapterList"></ul>
-  <p class="small">▸ <b>Hover</b> a marker for the headline, <b>click</b> it for the full story, then page through the saga with <b>‹ Prev / Next ›</b> or the arrow keys. Click an <b>empire's name</b> to learn about it. <b>🐎 Ride</b> in any story picks up the journey from that point; during the ride, <b>⏸ pause</b> to read at your own pace.</p>
+  <p class="small">▸ <b>Hover</b> a marker for the headline, <b>click</b> it for the full story, then page through the saga with <b>‹ Prev / Next ›</b> or the arrow keys. Click an <b>empire's name</b> to learn about it. <b>🐎 Ride</b> in any story picks up the journey from that point; during the ride, <b>⏸ pause</b> to read at your own pace. Unfamiliar name? The <b>🎓 glossary</b> explains them all.</p>
 </div>
 
 <button id="infoBtn" title="About this map" aria-label="About this map">i</button>
@@ -303,6 +330,17 @@
     share, adapt and reuse freely, as long as you credit <b>YingzhiVA</b> as the original creator. Basemap tiles remain © Esri.</p>
     <p>Spotted an error, or have an idea? Feedback is very welcome — please open an issue on
     <a href="https://github.com/YingzhiVA/jalal-al-din-journey/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+  </div>
+</div>
+
+<button id="glossBtn" title="Glossary — who's who and what's what" aria-label="Glossary">🎓</button>
+<div id="glossModal">
+  <div id="glossCard">
+    <button id="closeGloss">✕</button>
+    <h3>Who's who &amp; what's what</h3>
+    <p class="gsub">An A-to-Z of the people, realms, places and titles in this story.</p>
+    <input id="glossFilter" type="text" placeholder="Type to filter — try “Atabeg” or “Khorasan”…">
+    <div id="glossList"></div>
   </div>
 </div>
 
@@ -481,6 +519,71 @@ const REGION_LABELS = [
  {t:"Sea of Oman", lat:23.4, lng:64.5, cls:"sea-label"},
 ];
 
+/* A-to-Z glossary. k: person | realm | people | place | title */
+const GLOSSARY = [
+ // People
+ {t:"Jalal al-Din Mangburni", k:"person", d:"(c. 1199–1231) Eldest son of Muhammad II, last ruler of the Khwarazmian line, and the hero of this map. His Turkic byname is usually read as “mole on the nose”."},
+ {t:"Muhammad II", k:"person", d:"(r. 1200–1220) Khwarazmshah who pushed the empire to its greatest extent, provoked Genghis Khan — and died a fugitive on a Caspian island."},
+ {t:"Genghis Khan", k:"person", d:"(c. 1162–1227) Unifier of the Mongol tribes and founder of history's largest contiguous land empire; led the Khwarazmian campaign in person."},
+ {t:"Terken Khatun", k:"person", d:"Muhammad II's formidable Qipchaq mother, a rival court in her own right; she backed another grandson against Jalal al-Din and ended her days a Mongol captive."},
+ {t:"Shigi Qutuqu", k:"person", d:"Genghis Khan's adoptive brother and the empire's chief judge; commanded the Mongol army routed at Parwan in 1221."},
+ {t:"Ögedei", k:"person", d:"(r. 1229–1241) Genghis Khan's son and successor as Great Khan; sent Chormaqan west to finish the Khwarazmian story."},
+ {t:"Chormaqan", k:"person", d:"Mongol general whose lightning campaign of 1230–31 swept Persia and hunted Jalal al-Din to his end."},
+ {t:"Iltutmish", k:"person", d:"(r. 1211–1236) Sultan of Delhi, consolidator of the young sultanate — and author of history's politest refusal of asylum."},
+ {t:"Nasir al-Din Qabacha", k:"person", d:"Turkic ruler of Multan, Uch and Sindh; repeatedly defeated and squeezed for tribute during Jalal al-Din's Indian exile."},
+ {t:"Baraq Hajib", k:"person", d:"Qara Khitai commander who made himself ruler of Kerman; the little dynasty he founded there outlasted everyone else in this story."},
+ {t:"Kayqubad I", k:"person", d:"(r. 1220–1237) Seljuk Sultan of Rum at Anatolia's medieval peak; senior partner of the coalition that won at Yassıçemen."},
+ {t:"al-Ashraf", k:"person", d:"Ayyubid prince of the Jazira, later ruler of Damascus; brought the Ayyubid army to Yassıçemen."},
+ {t:"Rusudan", k:"person", d:"(r. 1223–1245) Queen of Georgia; inherited the kingdom near its zenith and fled Tiflis ahead of its sack in 1226."},
+ {t:"Özbeg", k:"person", d:"Last Eldiguzid Atabeg of Azerbaijan; lost Tabriz, treasury and wife to Jalal al-Din without drawing a sword."},
+ {t:"Ghiyath al-Din", k:"person", d:"Jalal al-Din's half-brother; his desertion in mid-battle at Isfahan in 1228 nearly handed the Mongols the day."},
+ {t:"al-Nasir", k:"person", d:"(r. 1180–1225) Abbasid Caliph and old enemy of the Khwarazmshahs; refusing Jalal al-Din aid earned him a march on Baghdad."},
+ {t:"al-Nasawi", k:"person", d:"Jalal al-Din's personal secretary; his biography of the sultan is the closest source we have to the man — flaws included."},
+ {t:"Juvayni", k:"person", d:"(1226–1283) Persian historian and administrator under the Mongols; his History of the World-Conqueror chronicles the era — written, carefully, for Mongol employers."},
+ // Realms
+ {t:"Khwarazmian Empire", k:"realm", d:"Turko-Persian empire ruled from Khwarazm; in 1218 the superpower of the eastern Islamic world, by 1221 rubble — twice rebuilt by its last prince."},
+ {t:"Mongol Empire", k:"realm", d:"Founded in 1206 by Genghis Khan; by 1230 it stretched from northern China to the Caspian and was still growing."},
+ {t:"Abbasid Caliphate", k:"realm", d:"The venerable caliphate of Baghdad (750–1258): politically reduced to Iraq by this era, spiritually still the head of Sunni Islam."},
+ {t:"Ayyubid Sultanate", k:"realm", d:"The house of Saladin, ruling Egypt, Syria and the Jazira as a sprawling family confederation."},
+ {t:"Seljuks of Rum", k:"realm", d:"The Turkish sultanate of Anatolia — “Rum” meaning Rome, after the formerly Byzantine lands it occupied."},
+ {t:"Georgia", k:"realm", d:"Christian kingdom of the Caucasus, fresh from its golden age; Jalal al-Din's victories at Garni and Tiflis began its long decline."},
+ {t:"Delhi Sultanate", k:"realm", d:"Muslim sultanate of northern India, founded in 1206 and rising fast under Iltutmish."},
+ {t:"Qara Khitai", k:"realm", d:"Central Asian empire founded by Khitan exiles from northern China; swallowed by Khwarazm and the Mongols just before this story begins."},
+ {t:"Salghurids", k:"realm", d:"The Atabegs of Fars, ruling from Shiraz; bought safety from every passing storm — Jalal al-Din included — with tribute and marriages."},
+ // Peoples
+ {t:"Qipchaqs", k:"people", d:"Turkic steppe people from north of the Caspian; backbone of the Khwarazmian army and the base of Terken Khatun's power."},
+ {t:"Khokhars", k:"people", d:"Clans of the Salt Range in the Punjab; supplied the half-drowned prince with his first new soldiers — and a bride."},
+ {t:"Khalaj", k:"people", d:"Turkic people settled on the Afghan marches; a core contingent of the army raised at Ghazni."},
+ {t:"Ghuris", k:"people", d:"Soldiers from Ghur in central Afghanistan, heirs of the recently extinguished Ghurid empire."},
+ {t:"Turkomans", k:"people", d:"Nomadic Oghuz Turkic tribesmen — the freelance cavalry of every army of the age."},
+ // Places
+ {t:"Khwarazm", k:"place", d:"Fertile oasis land on the lower Amu Darya, south of the Aral Sea; homeland of the empire and source of its royal title."},
+ {t:"Transoxiana", k:"place", d:"“The land beyond the Oxus” (the Amu Darya): the region of Samarkand and Bukhara, first to fall in 1220."},
+ {t:"Khorasan", k:"place", d:"The great north-east of the Persian world — today's north-eastern Iran, western Afghanistan and Turkmenistan; the invasion's most devastated region."},
+ {t:"Hindu Kush", k:"place", d:"The mountain wall between Central Asia and the Indian subcontinent; Jalal al-Din raised his army on its southern side."},
+ {t:"Karakum", k:"place", d:"The “black sand” desert of Turkmenistan, crossed with 300 horsemen in the escape from Gurganj."},
+ {t:"Makran", k:"place", d:"Furnace-hot coastal desert between India and Persia; the 1224 crossing cost most of the army — as it had cost Alexander the Great fifteen centuries earlier."},
+ {t:"Punjab", k:"place", d:"“Land of five rivers”: the broad, well-watered plain of the upper Indus."},
+ {t:"Salt Range", k:"place", d:"Hill country of the northern Punjab — Khokhar territory, and the first refuge after the Leap."},
+ {t:"Sindh", k:"place", d:"The lower Indus valley, Qabacha's domain."},
+ {t:"Azerbaijan", k:"place", d:"Historic region around Tabriz, spanning today's north-western Iran and the Republic of Azerbaijan; heart of the second empire."},
+ {t:"Caucasus", k:"place", d:"The mountain belt between the Black and Caspian Seas — home to Georgia, Armenia and a dozen smaller powers."},
+ {t:"Anatolia", k:"place", d:"Asia Minor, the great peninsula of modern Turkey; Seljuk country in the 1220s."},
+ {t:"Jazira", k:"place", d:"“The island”: upper Mesopotamia between the Tigris and Euphrates, an Ayyubid family domain."},
+ {t:"Sea of the Khazars", k:"place", d:"The medieval name of the Caspian Sea, after the Khazar realm once on its northern shore; Persian still calls it that today."},
+ {t:"Sea of Oman", k:"place", d:"Period name for today's Arabian Sea, reached by the raids of 1223–24."},
+ // Titles
+ {t:"Khwarazmshah", k:"title", d:"“Shah of Khwarazm” — an ancient royal title of the region; Jalal al-Din was its last bearer."},
+ {t:"Sultan", k:"title", d:"Supreme secular ruler in the Islamic world, wielding the power that the Caliph blessed but could not control."},
+ {t:"Shah", k:"title", d:"The Persian royal title — as old as Persia itself."},
+ {t:"Khan", k:"title", d:"Turko-Mongol title for a ruler; the Great Khan (khagan) was the supreme overlord of them all."},
+ {t:"Caliph", k:"title", d:"“Successor” of the Prophet Muhammad as leader of the Muslim community; by this era more spiritual figurehead than field power."},
+ {t:"Atabeg", k:"title", d:"“Father-lord”: a Turkic guardian appointed to raise a young prince — who usually ended up ruling in his ward's place."},
+ {t:"Khatun", k:"title", d:"Turkic and Mongol title for a queen, princess or great lady."},
+ {t:"Hajib", k:"title", d:"Court chamberlain; Baraq carried the title as part of his name long after outgrowing the job."},
+ {t:"Raja", k:"title", d:"Sanskrit royal title borne by Hindu kings and chieftains."},
+];
+
 /* =============================== MAP =============================== */
 
 const map = L.map('map', {zoomControl:false, minZoom:3, worldCopyJump:true, zoomSnap:0.25});
@@ -489,7 +592,7 @@ L.control.zoom({position:'bottomright'}).addTo(map);
 /* Put the layers and info buttons into Leaflet's own bottom-right control
    stack, so the whole column shares one alignment and spacing system.
    (Bottom-corner controls prepend, so each lands above the previous one.) */
-['modeToggle','infoBtn'].forEach(id=>{
+['modeToggle','infoBtn','glossBtn'].forEach(id=>{
   const el = document.getElementById(id);
   L.DomEvent.disableClickPropagation(el);
   const C = L.Control.extend({onAdd: ()=>el});
@@ -720,6 +823,12 @@ window.JADnav = function(i){
 };
 
 document.addEventListener('keydown', e=>{
+  if (e.key === 'Escape'){
+    document.getElementById('infoModal').classList.remove('show');
+    document.getElementById('glossModal').classList.remove('show');
+    return;
+  }
+  if (e.target.tagName === 'INPUT') return;  // don't hijack arrows in the glossary filter
   if (curEvt < 0) return;
   if (e.key === 'ArrowRight'){ e.preventDefault(); JADnav(curEvt+1); }
   else if (e.key === 'ArrowLeft'){ e.preventDefault(); JADnav(curEvt-1); }
@@ -816,6 +925,35 @@ const infoModal = document.getElementById('infoModal');
 document.getElementById('infoBtn').onclick = ()=>infoModal.classList.add('show');
 document.getElementById('closeInfo').onclick = ()=>infoModal.classList.remove('show');
 infoModal.onclick = e=>{ if (e.target === infoModal) infoModal.classList.remove('show'); };
+
+/* ---- Glossary modal ---- */
+const glossModal  = document.getElementById('glossModal');
+const glossList   = document.getElementById('glossList');
+const glossFilter = document.getElementById('glossFilter');
+const GTAG = {person:'person', realm:'realm', people:'people', place:'place', title:'title'};
+const gKey = t => t.replace(/^al-/i,'');  // sort al-Nasawi under N, scholar-style
+
+function renderGloss(q){
+  const hits = GLOSSARY
+    .filter(g => !q || (g.t+' '+g.d).toLowerCase().includes(q))
+    .sort((a,b)=>gKey(a.t).localeCompare(gKey(b.t)));
+  let html = '', letter = '';
+  for (const g of hits){
+    const L = gKey(g.t)[0].toUpperCase();
+    if (!q && L !== letter){ html += `<div class="gletter">${L}</div>`; letter = L; }
+    html += `<p class="gentry"><b>${g.t}</b><span class="gtag ${g.k}">${GTAG[g.k]}</span> — ${g.d}</p>`;
+  }
+  glossList.innerHTML = html || '<p class="gentry">Nothing matches — try a shorter word.</p>';
+}
+document.getElementById('glossBtn').onclick = ()=>{
+  glossFilter.value = '';
+  renderGloss('');
+  glossModal.classList.add('show');
+  glossList.scrollTop = 0;
+};
+document.getElementById('closeGloss').onclick = ()=>glossModal.classList.remove('show');
+glossModal.onclick = e=>{ if (e.target === glossModal) glossModal.classList.remove('show'); };
+glossFilter.oninput = ()=>renderGloss(glossFilter.value.trim().toLowerCase());
 
 /* =============================== PLAYBACK =============================== */
 

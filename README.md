@@ -18,6 +18,8 @@ Mongol Empire hunting him most of the way.
 - 🐎 **Ride the journey**: an animated playback with a live year ticker and
   distance odometer
 - 📊 A clickable 1220–1231 timeline showing how much happened in how little time
+- 🎓 A filterable A-to-Z glossary of the people, realms, places and titles of
+  the saga
 - 📱 Works on desktop and mobile; nothing to install
 
 ## Run it
