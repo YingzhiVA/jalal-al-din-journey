@@ -532,6 +532,14 @@ const modernTiles = L.tileLayer(
 
 histTiles.addTo(map);
 
+/* Auto-pan opened popups clear of the floating UI: the "The Story" chip at
+   the top-left (~54px tall incl. margin) and the timeline pill near the
+   bottom on phones. Leaflet only pans for its own edges otherwise. */
+const POPUP_PAD = {
+  autoPanPaddingTopLeft: L.point(12, 66),
+  autoPanPaddingBottomRight: L.point(12, window.innerWidth <= 760 ? 104 : 60),
+};
+
 /* Historical overlays (polities + period labels).
    Territories are non-interactive: no hover noise, and no browser focus
    rectangle when clicked. Descriptions live on the name labels instead. */
@@ -544,7 +552,7 @@ EMPIRES.forEach(e=>{
       html:`<div class="empire-label" style="color:${e.color}">${e.name}</div>`,
       iconSize:[220,20], iconAnchor:[110,10]})})
     .bindPopup(`<div class="pop"><h3>${e.name}</h3><div class="story">${e.tip}</div></div>`,
-               {maxWidth:300})
+               {maxWidth:300, ...POPUP_PAD})
     .addTo(histGroup);
 });
 REGION_LABELS.forEach(r=>{
@@ -690,7 +698,7 @@ EVENT_SEQ.forEach((s, i)=>{
   const m = L.marker([s.lat,s.lng], {icon, riseOnHover:true})
     .bindTooltip(`<b>${s.start?'▶ Start here — ':''}${s.title}</b><br>${s.then} · ${s.date}`,
                  {className:'evt-tip', direction:'top', offset:[0,-12], opacity:.97})
-    .bindPopup(popupHtml(s, i), {maxWidth:330})
+    .bindPopup(popupHtml(s, i), {maxWidth:330, ...POPUP_PAD})
     .addTo(map);
   EVENT_MARKERS.push(m);
   markersByStop.set(s, m);
