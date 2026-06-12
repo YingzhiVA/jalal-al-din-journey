@@ -144,6 +144,7 @@
     100%{box-shadow:0 0 0 0 rgba(201,138,43,0), 0 2px 6px rgba(0,0,0,.5);}
   }
   .horse-icon{font-size:26px;line-height:26px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6));}
+  .envoy-icon{font-size:20px;line-height:22px;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6));}
 
   /* ---------- Historical labels ---------- */
   .empire-label,.region-label,.sea-label{
@@ -163,6 +164,9 @@
   }
   .leaflet-popup-tip{background:var(--parchment);}
   .pop h3{font-family:'Cormorant Garamond',serif;font-size:19px;margin:0 0 1px;line-height:1.15;}
+  .pop .daterow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+  .pop .daterow .date{margin-bottom:0;}
+  .pop .daterow .chap{flex:0 0 auto;}
   .pop .date{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:6px;}
   .pop .names{font-size:11.5px;color:#7a6748;margin-bottom:7px;font-style:italic;}
   .pop .meter{font-size:11.5px;font-weight:600;color:#8a5a1f;background:rgba(201,138,43,.14);
@@ -551,8 +555,9 @@ for (let i=0;i<STOPS.length-1;i++){
   if (STOPS[i+1].title) eventAtIndex[flatPath.length-1] = STOPS[i+1];
 }
 
-/* Embassy dashed line */
-L.polyline(arcPoints(EMBASSY.from, EMBASSY.to, 1),
+/* Embassy dashed line (the envoy rides this during the animated journey) */
+const embassyPts = arcPoints(EMBASSY.from, EMBASSY.to, 1);
+L.polyline(embassyPts,
   {color:'#555', weight:2, dashArray:'4 7', opacity:.8, interactive:false}).addTo(map);
 
 /* Cumulative distance (haversine) along the plotted route — a conservative
@@ -588,12 +593,14 @@ function popupHtml(s, i){
     : `<div class="meter">⏳ Year ${yn} of 12 &nbsp;·&nbsp; 🐎 ≈ ${fmtKm(s._km)} km since Samarkand</div>`);
   return `<div class="pop">
     <h3>${s._num?s._num+'. ':''}${s.title}</h3>
-    <div class="date">${s.date}</div>
+    <div class="daterow">
+      <div class="date">${s.date}</div>
+      <span class="chap" style="background:${s.embassy?'#666':c.color}">${c.name}</span>
+    </div>
     <div class="names">Then: ${s.then} &nbsp;·&nbsp; Now: ${s.now}</div>
     ${meter}
     <div class="story">${s.story}</div>
     <div class="popfoot">
-      <span class="chap" style="background:${s.embassy?'#666':c.color}">${c.name}</span>
       <span class="nav nav-browse">
         ${s._flatIdx!=null && i<EVENT_SEQ.length-1
           ? `<button class="nb ride-from" onclick="JADride(${i})" title="Continue the ride from this point">🐎 Ride</button>` : ''}
@@ -742,6 +749,46 @@ infoModal.onclick = e=>{ if (e.target === infoModal) infoModal.classList.remove(
 
 const horse = L.marker(flatPath[0], {zIndexOffset:10000, interactive:false,
   icon:L.divIcon({className:'', html:'<div class="horse-icon">🐎</div>', iconSize:[26,26], iconAnchor:[13,16]})});
+const envoy = L.marker(embassyPts[0], {zIndexOffset:10000, interactive:false,
+  icon:L.divIcon({className:'', html:'<div class="envoy-icon">✉</div>', iconSize:[22,22], iconAnchor:[11,11]})});
+
+/* Embassy interlude: at Uch the horse waits while the envoy rides to Delhi,
+   delivers "A Polite Refusal", and returns. */
+const UCH_STOP = STOPS.find(s=>s.title==="War on the Indus Plain");
+let pendingEmbassy=false, embPhase=null, embIdx=0, embSeg=0;
+
+function stepEmbassy(dt){
+  if (embPhase === 'dwell'){          // dwell over (outer gate just released)
+    map.closePopup();
+    embPhase = 'back'; embSeg = 0;
+  }
+  const pts = embassyPts, dir = embPhase === 'out' ? 1 : -1;
+  let remaining = SPEED * 1.4 * dt / 1000;     // couriers ride faster
+  while (remaining > 0){
+    const next = embIdx + dir;
+    if (next < 0 || next >= pts.length) break;
+    const a = pts[embIdx], b = pts[next];
+    const d = Math.hypot(b[0]-a[0], b[1]-a[1]) || 1e-9;
+    const left = d - embSeg;
+    if (remaining >= left){ remaining -= left; embIdx = next; embSeg = 0; }
+    else {
+      embSeg += remaining; remaining = 0;
+      const p = [a[0]+(b[0]-a[0])*(embSeg/d), a[1]+(b[1]-a[1])*(embSeg/d)];
+      envoy.setLatLng(p); follow({lat:p[0], lng:p[1]});
+    }
+  }
+  if (embPhase === 'out' && embIdx >= pts.length-1){
+    envoy.setLatLng(pts[pts.length-1]);
+    const m = markersByStop.get(EMBASSY);
+    if (m) m.openPopup();
+    setTimelineTo(EVENT_SEQ.indexOf(EMBASSY));
+    pauseUntil = performance.now() + dwellFor(EMBASSY);
+    embPhase = 'dwell'; embSeg = 0;
+  } else if (embPhase === 'back' && embIdx <= 0){
+    map.removeLayer(envoy);
+    embPhase = null;                  // the main ride resumes next frame
+  }
+}
 const progressLine = L.polyline([], {color:'#fffdf0', weight:3, opacity:.9, dashArray:'1 6', interactive:false});
 
 const playBtn = document.getElementById('playBtn');
@@ -770,7 +817,8 @@ window.JADstop  = ()=>stopPlayback();
 function stopPlayback(){
   playing=false; setPaused(false);
   if (rafId) cancelAnimationFrame(rafId);
-  map.removeLayer(horse); map.removeLayer(progressLine);
+  map.removeLayer(horse); map.removeLayer(progressLine); map.removeLayer(envoy);
+  pendingEmbassy = false; embPhase = null;
   document.body.classList.remove('riding');
   resetTimeline();
   if (panelWasOpen) showPanel();
@@ -805,6 +853,7 @@ function announce(s){
   rideYear = yearOf(s);
   rideYearN = Math.min(12, Math.max(1, +rideYear - 1219));
   setTimelineTo(EVENT_SEQ.indexOf(s));
+  if (s === UCH_STOP) pendingEmbassy = true;
   const m = markersByStop.get(s);
   if (m) m.openPopup();
 }
@@ -814,9 +863,23 @@ function step(ts){
   if (!lastTs) lastTs = ts;
   const dt = Math.min(50, ts - lastTs); lastTs = ts;
 
-  /* User hit pause: freeze everything, including the event-dwell countdown */
-  if (userPaused){ pauseUntil += dt; rafId = requestAnimationFrame(step); return; }
+  /* User hit pause: freeze everything, including the event-dwell countdown.
+     Only push an ACTIVE dwell forward — extending an expired one would make
+     the ride sit still after resuming from a pause made mid-travel. */
+  if (userPaused){
+    if (pauseUntil > ts) pauseUntil += dt;
+    rafId = requestAnimationFrame(step); return;
+  }
   if (ts < pauseUntil){ rafId = requestAnimationFrame(step); return; }
+
+  if (embPhase){ stepEmbassy(dt); rafId = requestAnimationFrame(step); return; }
+  if (pendingEmbassy){
+    pendingEmbassy = false;
+    embPhase = 'out'; embIdx = 0; embSeg = 0;
+    map.closePopup();
+    envoy.setLatLng(embassyPts[0]); envoy.addTo(map);
+    rafId = requestAnimationFrame(step); return;
+  }
   map.closePopup();
 
   let remaining = SPEED * dt / 1000;
