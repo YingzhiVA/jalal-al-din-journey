@@ -268,6 +268,15 @@
     border-radius:8px;padding:1px 7px 2px;margin-left:6px;position:relative;top:-1px;color:#fff;}
   .gtag.person{background:#b33a3a;} .gtag.realm{background:#3f7fa6;} .gtag.people{background:#7d5ba6;}
   .gtag.place{background:#5e8c4a;}  .gtag.title{background:#c98a2b;}
+  .gentry{transition:background .9s ease;}
+  .gentry.flash{background:rgba(201,138,43,.30);border-radius:6px;transition:none;}
+
+  /* Dotted glossary links inside story text */
+  .pop .story a.glink{
+    color:inherit;text-decoration:none;cursor:pointer;
+    border-bottom:1px dotted rgba(138,47,29,.8);
+  }
+  .pop .story a.glink:hover{color:var(--accent);border-bottom-style:solid;}
 
   @media (max-height:680px){
     #panel{padding:10px 16px 7px;}
@@ -309,7 +318,7 @@
   <h1>The Last Khwarazmshah</h1>
   <h2>The flight, fall and fury of Jalal al-Din Mangburni, <span style="white-space:nowrap">1220–1231</span></h2>
   <div class="stat">⏳ <b>11 years</b> &nbsp;·&nbsp; 🐎 ≈ <b><span id="totKm"></span> km</b> in the saddle — roughly a third of the way around the Earth, almost all of it while being hunted.</div>
-  <p>When Genghis Khan's armies took <b>Samarkand</b> in 1220 and shattered the Khwarazmian Empire, one prince refused to accept the end of his world. For eleven years Jalal al-Din fled, fought, leapt off a cliff into the Indus on horseback, conquered an exile-empire in Persia — and died alone in the mountains of Kurdistan.</p>
+  <p>When Genghis Khan's armies took Samarkand in 1220 and shattered the Khwarazmian Empire, one prince refused to accept the end of his world. For eleven years Jalal al-Din fled, fought, leapt off a cliff into the Indus on horseback, conquered an exile-empire in Persia — and died alone in the mountains of Kurdistan.</p>
   <button id="playBtn">▶ &nbsp;Ride the journey</button>
   <p class="listcap">Jump to a chapter</p>
   <ul class="chapters" id="chapterList"></ul>
@@ -585,6 +594,47 @@ const GLOSSARY = [
  {t:"Raja", k:"title", d:"Sanskrit royal title borne by Hindu kings and chieftains."},
 ];
 
+/* Surface forms in story text → glossary term. Longest alias wins at any
+   position; only the first occurrence of each term is linked per story.
+   Deliberately absent: Jalal al-Din (he is every story), Mongols (likewise)
+   and bare "Sultan"/"Shah"/"Khan" (almost always part of someone's name). */
+const GLOSS_ALIASES = [
+ ["Atabeg of Fars","Salghurids"], ["Kingdom of Georgia","Georgia"],
+ ["Khwarazmian Empire","Khwarazmian Empire"], ["Qara Khitai","Qara Khitai"],
+ ["Great Khan","Khan"], ["Hindu Kush","Hindu Kush"], ["Salt Range","Salt Range"],
+ ["Genghis Khan","Genghis Khan"], ["Genghis","Genghis Khan"],
+ ["Muhammad II","Muhammad II"], ["Terken Khatun","Terken Khatun"],
+ ["Shigi Qutuqu","Shigi Qutuqu"], ["Ögedei","Ögedei"], ["Chormaqan","Chormaqan"],
+ ["Iltutmish","Iltutmish"], ["Qabacha","Nasir al-Din Qabacha"],
+ ["Baraq Hajib","Baraq Hajib"], ["Kayqubad I","Kayqubad I"], ["al-Ashraf","al-Ashraf"],
+ ["Rusudan","Rusudan"], ["Özbeg","Özbeg"], ["al-Nasawi","al-Nasawi"],
+ ["Ayyubid","Ayyubid Sultanate"], ["Seljuks","Seljuks of Rum"], ["Seljuk","Seljuks of Rum"],
+ ["Khokhar","Khokhars"], ["Khalaj","Khalaj"], ["Ghuri","Ghuris"], ["Turkoman","Turkomans"],
+ ["Samarkand","Samarkand"], ["Khorasan","Khorasan"], ["Karakum","Karakum"],
+ ["Makran","Makran"], ["Punjab","Punjab"], ["Sindh","Sindh"],
+ ["Azerbaijan","Azerbaijan"], ["Caucasus","Caucasus"], ["Anatolia","Anatolia"],
+ ["Jazira","Jazira"], ["Transoxiana","Transoxiana"], ["Khwarazmshah","Khwarazmshah"],
+ ["Khwarazm","Khwarazm"], ["Caliph","Caliph"], ["Atabeg","Atabeg"],
+ ["Khatun","Khatun"], ["raja","Raja"],
+];
+
+const GLOSS_ALIAS_MAP = new Map(GLOSS_ALIASES);
+const GLOSS_LINK_RE = new RegExp(
+  GLOSS_ALIASES.map(a=>a[0].replace(/[.*+?^${}()|[\]\\]/g,'\\$&'))
+    .sort((a,b)=>b.length-a.length).join('|'), 'g');
+const isWordCh = ch => !!ch && /[\p{L}\p{N}]/u.test(ch);
+
+function linkifyStory(text){
+  const done = new Set();
+  return text.replace(GLOSS_LINK_RE, (m, off, full)=>{
+    const term = GLOSS_ALIAS_MAP.get(m);
+    if (done.has(term)) return m;
+    if (isWordCh(full[off-1]) || isWordCh(full[off+m.length])) return m;
+    done.add(term);
+    return `<a class="glink" onclick="JADgloss('${term}')">${m}</a>`;
+  });
+}
+
 /* =============================== MAP =============================== */
 
 const map = L.map('map', {zoomControl:false, minZoom:3, worldCopyJump:true, zoomSnap:0.25});
@@ -655,7 +705,7 @@ EMPIRES.forEach(e=>{
   L.marker(e.label, {interactive:true, icon:L.divIcon({className:'',
       html:`<div class="empire-label" style="color:${e.color}">${e.name}</div>`,
       iconSize:[220,20], iconAnchor:[110,10]})})
-    .bindPopup(`<div class="pop"><h3>${e.name}</h3><div class="story">${e.tip}</div></div>`,
+    .bindPopup(`<div class="pop"><h3>${e.name}</h3><div class="story">${linkifyStory(e.tip)}</div></div>`,
                {maxWidth:300, ...POPUP_PAD})
     .addTo(histGroup);
 });
@@ -770,7 +820,7 @@ function popupHtml(s, i){
     </div>
     <div class="names">Then: ${s.then} &nbsp;·&nbsp; Now: ${s.now}</div>
     ${meter}
-    <div class="story">${s.story}</div>
+    <div class="story">${linkifyStory(s.story)}</div>
     <div class="popfoot">
       <span class="nav nav-browse">
         ${s._flatIdx!=null && i<EVENT_SEQ.length-1
@@ -826,7 +876,7 @@ window.JADnav = function(i){
 document.addEventListener('keydown', e=>{
   if (e.key === 'Escape'){
     document.getElementById('infoModal').classList.remove('show');
-    document.getElementById('glossModal').classList.remove('show');
+    closeGlossModal();
     return;
   }
   if (e.target.tagName === 'INPUT') return;  // don't hijack arrows in the glossary filter
@@ -942,7 +992,7 @@ function renderGloss(q){
   for (const g of hits){
     const L = gKey(g.t)[0].toUpperCase();
     if (!q && L !== letter){ html += `<div class="gletter">${L}</div>`; letter = L; }
-    html += `<p class="gentry"><b>${g.t}</b><span class="gtag ${g.k}">${GTAG[g.k]}</span> — ${g.d}</p>`;
+    html += `<p class="gentry" data-t="${g.t}"><b>${g.t}</b><span class="gtag ${g.k}">${GTAG[g.k]}</span> — ${g.d}</p>`;
   }
   glossList.innerHTML = html || '<p class="gentry">Nothing matches — try a shorter word.</p>';
 }
@@ -952,9 +1002,32 @@ document.getElementById('glossBtn').onclick = ()=>{
   glossModal.classList.add('show');
   glossList.scrollTop = 0;
 };
-document.getElementById('closeGloss').onclick = ()=>glossModal.classList.remove('show');
-glossModal.onclick = e=>{ if (e.target === glossModal) glossModal.classList.remove('show'); };
+document.getElementById('closeGloss').onclick = ()=>closeGlossModal();
+glossModal.onclick = e=>{ if (e.target === glossModal) closeGlossModal(); };
 glossFilter.oninput = ()=>renderGloss(glossFilter.value.trim().toLowerCase());
+
+/* Story-text glossary links: during a ride, opening the glossary pauses it
+   and closing resumes it (unless the rider had paused on their own). */
+let glossAutoPaused = false;
+function closeGlossModal(){
+  glossModal.classList.remove('show');
+  if (glossAutoPaused){
+    glossAutoPaused = false;
+    if (playing && userPaused) setPaused(false);
+  }
+}
+window.JADgloss = function(term){
+  if (playing && !userPaused){ setPaused(true); glossAutoPaused = true; }
+  glossFilter.value = '';
+  renderGloss('');
+  glossModal.classList.add('show');
+  const el = [...glossList.querySelectorAll('.gentry')].find(p=>p.dataset.t === term);
+  if (el){
+    el.scrollIntoView({block:'center'});
+    el.classList.add('flash');
+    setTimeout(()=>el.classList.remove('flash'), 1400);
+  }
+};
 
 /* =============================== PLAYBACK =============================== */
 
