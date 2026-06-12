@@ -124,17 +124,18 @@
   #timeline{
     position:absolute;z-index:1000;left:50%;bottom:14px;transform:translateX(-50%);
     display:flex;align-items:center;gap:10px;background:rgba(33,24,14,.88);color:#f3e9d2;
-    border-radius:20px;padding:8px 18px;font-size:12px;max-width:92vw;
+    border-radius:20px;padding:8px 18px;font-size:12px;
+    max-width:calc(100vw - 124px);  /* never reaches under the corner controls */
     box-shadow:0 4px 16px rgba(0,0,0,.45);
   }
   .tl-end{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:14px;color:#c9a85c;}
-  .tl-track{position:relative;width:250px;height:8px;background:rgba(243,233,210,.18);border-radius:4px;flex:0 0 auto;}
+  .tl-track{position:relative;flex:0 1 250px;min-width:80px;height:8px;background:rgba(243,233,210,.18);border-radius:4px;}
   .tl-fill{position:absolute;left:0;top:0;height:100%;width:0;border-radius:4px;
     background:linear-gradient(90deg,#c98a2b,#b33a3a,#7d5ba6);transition:width .7s ease;}
   .tl-tick{position:absolute;top:50%;width:7px;height:7px;border-radius:50%;
     transform:translate(-50%,-50%);cursor:pointer;border:1px solid rgba(255,253,245,.6);transition:transform .1s;}
   .tl-tick:hover{transform:translate(-50%,-50%) scale(1.7);}
-  .tl-label{white-space:nowrap;font-size:12.5px;}
+  .tl-label{white-space:nowrap;font-size:12.5px;min-width:0;overflow:hidden;text-overflow:ellipsis;}
   .tl-label b{color:#e8b84b;font-weight:600;}
 
   /* ---------- Markers ---------- */
@@ -242,10 +243,14 @@
     .stat{padding:6px 9px;font-size:12px;}
     #playBtn{padding:7px;font-size:13.5px;margin-bottom:6px;}
   }
+  @media (max-width:900px){
+    #timeline{bottom:40px;}   /* clear the attribution line on mid-size screens */
+  }
   @media (max-width:640px){
     #panel{width:calc(100vw - 28px);max-height:55%;}
-    .tl-track{width:120px;}
-    #timeline{padding:6px 12px;gap:7px;}
+    /* left-anchored, clear of the control column and the attribution line */
+    #timeline{left:10px;right:56px;bottom:48px;transform:none;max-width:none;
+      padding:6px 12px;gap:7px;}
   }
 </style>
 </head>
@@ -497,12 +502,12 @@ fitJourney();
 
 const histTiles = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}',
-  {maxNativeZoom:13, maxZoom:13, attribution:'Terrain © Esri | Story map: the journey of Jalal al-Din Mangburni'});
+  {maxNativeZoom:13, maxZoom:13, attribution:'Terrain © Esri'});
 /* Esri World Topo: modern borders/cities with English labels (OSM default tiles
    label places in each region's local script, hard for an English-reading audience) */
 const modernTiles = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-  {maxZoom:19, attribution:'Map © Esri & contributors | Story map: the journey of Jalal al-Din Mangburni'});
+  {maxZoom:19, attribution:'Map © Esri & contributors'});
 
 histTiles.addTo(map);
 
