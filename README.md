@@ -7,7 +7,7 @@ Mongol Empire hunting him most of the way.
 
 **[▶ Explore it live](https://yingzhiva.github.io/jalal-al-din-journey/)**
 
-![Preview](preview-card.png)
+![Preview](preview-card-2.png)
 
 ## Features
 
