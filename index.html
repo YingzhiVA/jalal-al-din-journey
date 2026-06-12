@@ -32,7 +32,7 @@
   /* ---------- Story panel ---------- */
   #panel{
     box-sizing:border-box;
-    position:absolute;z-index:1000;top:14px;left:14px;width:330px;max-height:calc(100% - 28px);
+    position:absolute;z-index:1000;top:14px;left:14px;width:388px;max-height:calc(100% - 28px);
     overflow-y:auto;background:var(--parchment);color:var(--ink);
     border:1px solid var(--parchment-edge);border-radius:10px;
     box-shadow:0 6px 24px rgba(40,25,5,.45);padding:14px 18px 10px;
@@ -177,6 +177,8 @@
     border-radius:6px;padding:3px 10px;cursor:pointer;font-size:12px;font-weight:600;}
   .pop .nb:hover:not(:disabled){background:var(--accent);color:#f7eedd;border-color:var(--accent);}
   .pop .nb:disabled{opacity:.35;cursor:default;}
+  .pop .nb.ride-from{background:var(--accent);color:#f7eedd;border-color:var(--accent);margin-right:4px;}
+  .pop .nb.ride-from:hover{background:#a13a24;}
   .leaflet-tooltip.evt-tip{
     background:rgba(33,24,14,.92);color:#f3e9d2;border:none;border-radius:6px;
     font-family:'Source Sans 3',sans-serif;font-size:12.5px;padding:5px 10px;
@@ -235,13 +237,13 @@
 <div id="panel">
   <button id="closePanel" title="Hide panel">✕</button>
   <h1>The Last Khwarazmshah</h1>
-  <h2>The flight, fall and fury of Jalal al-Din Mangburni, 1220–1231</h2>
+  <h2>The flight, fall and fury of Jalal al-Din Mangburni, <span style="white-space:nowrap">1220–1231</span></h2>
   <div class="stat">⏳ <b>11 years</b> &nbsp;·&nbsp; 🐎 ≈ <b><span id="totKm"></span> km</b> in the saddle — roughly a third of the way around the Earth, almost all of it while being hunted.</div>
   <p>When Genghis Khan's armies took <b>Samarkand</b> in 1220 and shattered the Khwarazmian Empire, one prince refused to accept the end of his world. For eleven years Jalal al-Din fled, fought, leapt off a cliff into the Indus on horseback, conquered an exile-empire in Persia — and died alone in the mountains of Kurdistan.</p>
   <button id="playBtn">▶ &nbsp;Ride the journey</button>
   <p class="listcap">Jump to a chapter</p>
   <ul class="chapters" id="chapterList"></ul>
-  <p class="small">▸ <b>Hover</b> a marker for the headline, <b>click</b> it for the full story, then page through the saga with <b>‹ Prev / Next ›</b> or the arrow keys. Click an <b>empire's name</b> to learn about it. During the ride, <b>⏸ pause</b> to read at your own pace.</p>
+  <p class="small">▸ <b>Hover</b> a marker for the headline, <b>click</b> it for the full story, then page through the saga with <b>‹ Prev / Next ›</b> or the arrow keys. Click an <b>empire's name</b> to learn about it. <b>🐎 Ride</b> in any story picks up the journey from that point; during the ride, <b>⏸ pause</b> to read at your own pace.</p>
 </div>
 
 <button id="infoBtn" title="About this map">ⓘ</button>
@@ -565,7 +567,7 @@ function fmtKm(k){ return (Math.round(k/50)*50).toLocaleString('en-US'); }
 const cumKm=[0];
 for (let i=1;i<flatPath.length;i++) cumKm[i]=cumKm[i-1]+havKm(flatPath[i-1],flatPath[i]);
 const totalKm = cumKm[cumKm.length-1];
-for (const [i,s] of Object.entries(eventAtIndex)) s._km = cumKm[i];
+for (const [i,s] of Object.entries(eventAtIndex)){ s._km = cumKm[i]; s._flatIdx = +i; }
 
 /* =============================== MARKERS =============================== */
 
@@ -593,6 +595,8 @@ function popupHtml(s, i){
     <div class="popfoot">
       <span class="chap" style="background:${s.embassy?'#666':c.color}">${c.name}</span>
       <span class="nav nav-browse">
+        ${s._flatIdx!=null && i<EVENT_SEQ.length-1
+          ? `<button class="nb ride-from" onclick="JADride(${i})" title="Continue the ride from this point">🐎 Ride</button>` : ''}
         <button class="nb" onclick="JADnav(${i-1})" ${i===0?'disabled':''}>‹ Prev</button>
         <span class="cnt">${i+1} / ${EVENT_SEQ.length}</span>
         <button class="nb" onclick="JADnav(${i+1})" ${i===EVENT_SEQ.length-1?'disabled':''}>Next ›</button>
@@ -774,20 +778,24 @@ function stopPlayback(){
   map.closePopup();
 }
 
-function startPlayback(){
-  if (playing){ stopPlayback(); return; }
-  playing=true; idx=0; lastTs=0; pauseUntil=0; segDone=0; setPaused(false);
-  progressLine.setLatLngs([flatPath[0]]);
-  horse.setLatLng(flatPath[0]);
+function startPlayback(fromStop){
+  if (playing){
+    stopPlayback();
+    if (!fromStop) return;           // the main play button acts as a toggle
+  }
+  playing=true; lastTs=0; pauseUntil=0; segDone=0; setPaused(false);
+  idx = (fromStop && fromStop._flatIdx != null) ? fromStop._flatIdx : 0;
+  progressLine.setLatLngs([flatPath[idx]]);
+  horse.setLatLng(flatPath[idx]);
   horse.addTo(map); progressLine.addTo(map);
   document.body.classList.add('riding');
   playBtn.textContent='⏹  Stop the ride';
   // collapse the story panel for full immersion; restored when the ride ends
   panelWasOpen = !document.getElementById('panel').classList.contains('hidden');
   hidePanel();
-  map.setView(flatPath[0], Math.max(map.getZoom(), 6), {animate:true});
-  announce(eventAtIndex[0]);
-  pauseUntil = performance.now() + dwellFor(eventAtIndex[0]);
+  map.setView(flatPath[idx], Math.max(map.getZoom(), 6), {animate:true});
+  announce(eventAtIndex[idx]);
+  pauseUntil = performance.now() + dwellFor(eventAtIndex[idx]);
   rafId = requestAnimationFrame(step);
 }
 
@@ -856,7 +864,14 @@ function follow(p){
   }
 }
 
-playBtn.onclick = startPlayback;
+playBtn.onclick = ()=>startPlayback(null);
+window.JADride = function(i){
+  const s = EVENT_SEQ[i];
+  if (!s || s._flatIdx == null) return;
+  /* Defer until the click finishes bubbling: starting the ride re-renders the
+     popup mid-dispatch, which lets the click escape to the map and close it. */
+  setTimeout(()=>startPlayback(s), 0);
+};
 tlPause.onclick = ()=>setPaused(!userPaused);
 document.getElementById('tlStop').onclick = stopPlayback;
 </script>
